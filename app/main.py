@@ -1,27 +1,30 @@
 from functools import lru_cache
-from astrapy.db import AstraDB
 from fastapi import Depends, FastAPI
+from cassandra.cqlengine.management import sync_table
+from contextlib import asynccontextmanager
 
-from .config import Settings
-
-
-@lru_cache
-def get_settings():
-    return Settings()
+from .users.models import User
+from . import db
 
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    print("Hello World")
+    db.get_session()
+    sync_table(User)
+    yield
+    print("Bbye World")
 
 
-@app.get("/")
-def get_session(settings: Settings = Depends(get_settings)):
-    db = AstraDB(
-        token=settings.DB_TOKEN,
-        api_endpoint=settings.DB_ENDPOINT)
-    print(f"Connected to Astra DB: {db.get_collections()}")
-    return {"hello": "world"}
+app = FastAPI(lifespan=lifespan)
 
 
 @app.get("/")
-async def hello_world():
+def get_session():
     return {"hello": "world"}
+
+
+@app.get("/users")
+def users_list_view():
+    q = User.objects.all().limit(10)
+    return list(q)

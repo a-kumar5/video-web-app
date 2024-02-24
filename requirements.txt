@@ -29,3 +29,6 @@ typing_extensions==4.9.0
 urllib3==2.2.1
 uvicorn==0.27.1
 pydantic-settings==2.2.1
+python-dotenv==1.0.1
+email-validator
+passlib[bcrypt]
